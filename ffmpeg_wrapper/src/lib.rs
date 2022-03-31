@@ -50,6 +50,7 @@ pub fn run(config: Config) {
             .arg(&config.output_mp4)
             .spawn().expect("cannot execute ffmpeg");
             process.wait();
+            println!("LOW!!!!!!!!!!!!!!!!!!!!");
         },
     };
 }
@@ -73,7 +74,7 @@ impl Config {
             None => return Err("Cannot get a output mp4 string"),
         };
 
-        let is_high_quarity = env::var("HIGH_QUARITY").is_err();
+        let is_high_quarity = env::var("HIGH_QUARITY").is_ok();
 
         if is_high_quarity {
             Ok(Config {input_png, input_wav, environment_variable: Environment::HighQuarity, output_mp4})
