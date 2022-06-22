@@ -2,7 +2,7 @@ mod cg_system;
 mod objects;
 
 use cg_system::CGExecutor;
-use objects::Sphere;
+use objects::{Sphere, Object};
 
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
@@ -19,9 +19,9 @@ fn main() {
         let sphere_center = Vector3::new(0.0, sphere_index as f32 * 3.0 - 9.0, 0.0);
         let sphere_radius = (sphere_index+1) as f32;
         let color = Vector4::new(sphere_index as f32 / 5.0, 0.0, 0.5, 1.0);
-        let sphere = Sphere::new();
+        let mut sphere = Sphere::new();
         sphere.translocate(sphere_center);
-        sphere.rescale(sphere_radius);
+        sphere.set_scale(sphere_radius);
         sphere.set_color(color);
         vertex_array.push(sphere.encode());
     }

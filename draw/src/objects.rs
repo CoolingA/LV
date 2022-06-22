@@ -80,13 +80,9 @@ pub trait Object {
 
     fn rotate_z(&mut self, theta_z: f32, center_x: f32, center_y: f32);
     
-    fn set_color(&mut self, color: Vector4) {
-        self.color = color;
-    }
+    fn set_color(&mut self, color: Vector4);
 
-    fn rescale(&mut self, scale: f32) {
-        self.scale = scale;
-    }
+    fn set_scale(&mut self, scale: f32);
 
     // and so on
 }
@@ -102,7 +98,7 @@ impl Object for Sphere {
         Sphere {
             center: Vector3::new(0.0, 0.0, 0.0),
             scale: 1.0,
-            color: Vector4::new(0.0, 0.0, 0.0),
+            color: Vector4::new(0.0, 0.0, 0.0, 1.0),
         }
     }
 
@@ -189,6 +185,14 @@ impl Object for Sphere {
         let rot_z = Matrix4::from_angle_x(rad);
         self.center = rot_z.transform_vector(self.center);
         self.translocate(diff);
+    }
+
+    fn set_color(&mut self, color: Vector4) {
+        self.color = color;
+    }
+
+    fn set_scale(&mut self, scale: f32) {
+        self.scale = scale;
     }
 }
 
