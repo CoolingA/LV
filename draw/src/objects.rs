@@ -32,6 +32,41 @@ impl Node {
             self.texture.x, self.texture.y
         ]
     }
+
+    fn translocate(&mut self, diff: Vector3) {
+        self.coordinate += diff;
+    }
+
+
+    fn rotate_x(&mut self, theta_x: f32, center_y: f32, center_z: f32) {
+        let diff = Vector3::new(0.0, center_y, center_z);
+        self.translocate(-diff);
+        let rad = Rad(theta_x);
+        let rot_x = Matrix4::from_angle_x(rad);
+        self.coordinate = rot_x.transform_vector(self.coordinate);
+        self.normal = rot_x.transform_vector(self.normal);
+        self.translocate(diff);
+    }
+
+    fn rotate_y(&mut self, theta_y: f32, center_x: f32, center_z: f32) {
+        let diff = Vector3::new(center_x, 0.0, center_z);
+        self.translocate(-diff);
+        let rad = Rad(theta_y);
+        let rot_y = Matrix4::from_angle_x(rad);
+        self.coordinate = rot_y.transform_vector(self.coordinate);
+        self.normal = rot_y.transform_vector(self.normal);
+        self.translocate(diff);
+    }
+
+    fn rotate_z(&mut self, theta_z: f32, center_x: f32, center_y: f32) {
+        let diff = Vector3::new(center_x, center_y, 0.0);
+        self.translocate(-diff);
+        let rad = Rad(theta_z);
+        let rot_z = Matrix4::from_angle_x(rad);
+        self.coordinate = rot_z.transform_vector(self.coordinate);
+        self.normal = rot_z.transform_vector(self.normal);
+        self.translocate(diff);
+    }
 }
 
 
@@ -166,6 +201,7 @@ impl Object for Sphere {
         let rad = Rad(theta_x);
         let rot_x = Matrix4::from_angle_x(rad);
         self.center = rot_x.transform_vector(self.center);
+
         self.translocate(diff);
     }
 
