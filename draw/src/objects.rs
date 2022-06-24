@@ -126,6 +126,7 @@ pub struct Sphere {
     pub center: Vector3,
     pub scale: f32,
     pub color: Vector4,
+    pub nodes: Vec<Node>,
 }
 
 impl Object for Sphere {
