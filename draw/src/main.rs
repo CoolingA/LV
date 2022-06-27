@@ -3,6 +3,7 @@ mod objects;
 
 use cg_system::CGExecutor;
 use objects::{Sphere, Object};
+use std::f32::consts::PI;
 
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
@@ -15,14 +16,18 @@ fn main() {
     let window_height: u32 = 1080;
 
     let mut vertex_array = vec![];
-    for sphere_index in 0..5 {
+    for sphere_index in 0..7 {
         let sphere_center = Vector3::new(0.0, sphere_index as f32 * 3.0 - 9.0, 0.0);
-        let sphere_radius = (sphere_index+1) as f32;
+        let sphere_radius = 1.0;
         let color = Vector4::new(sphere_index as f32 / 5.0, 0.0, 0.5, 1.0);
         let mut sphere = Sphere::new();
+        sphere.rescale_x(sphere_radius*2.0);
+        sphere.rescale_y(sphere_radius*1.0);
+        sphere.rescale_z(sphere_radius*1.0);
+        sphere.recolor(color);
+        sphere.generate_nodes();
         sphere.translocate(sphere_center);
-        sphere.set_scale(sphere_radius);
-        sphere.set_color(color);
+        sphere.rotate_z(PI/3.0*sphere_index as f32, sphere_center.x, sphere_center.y);
         vertex_array.push(sphere.encode());
     }
     let camera_x = 20.0 as f32;
