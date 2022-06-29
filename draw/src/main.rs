@@ -2,8 +2,8 @@ mod cg_system;
 mod objects;
 
 use cg_system::CGExecutor;
-use objects::{Sphere, Object};
 use std::f32::consts::PI;
+use objects::{Object, Sphere, Cube};
 
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
@@ -20,12 +20,12 @@ fn main() {
         let sphere_center = Vector3::new(0.0, sphere_index as f32 * 3.0 - 9.0, 0.0);
         let sphere_radius = 1.0;
         let color = Vector4::new(sphere_index as f32 / 5.0, 0.0, 0.5, 1.0);
-        let mut sphere = Sphere::new();
+        let mut sphere = Object::<Sphere>::new();
         sphere.rescale_x(sphere_radius*2.0);
         sphere.rescale_y(sphere_radius*1.0);
         sphere.rescale_z(sphere_radius*1.0);
         sphere.recolor(color);
-        sphere.generate_nodes();
+        sphere.generate_sphere_nodes();
         sphere.translocate(sphere_center);
         sphere.rotate_z(PI/3.0*sphere_index as f32, sphere_center.x, sphere_center.y);
         vertex_array.push(sphere.encode());
