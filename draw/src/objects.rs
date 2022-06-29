@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use cgmath::Transform;
 use cgmath::Rad;
 use cgmath::InnerSpace;
@@ -7,6 +9,7 @@ type Matrix3 = cgmath::Matrix3<f32>;
 type Matrix4 = cgmath::Matrix4<f32>;
 type Vector4 = cgmath::Vector4<f32>;
 type Vector2 = cgmath::Vector2<f32>;
+
 
 pub struct Node {
     coordinate: Vector3,
@@ -68,77 +71,29 @@ impl Node {
         self.normal = rot_z.transform_vector(self.normal);
         self.translocate(diff);
     }
-}
+}   //Node
 
 
-struct PoolarVector {
-    begin: Vector3,
-    r: Vector3,
-    theta: f32,
-    phi: f32,
-}
+pub trait SphereTrait{}
+pub struct Sphere;
+impl SphereTrait for Sphere{}
 
-impl  PoolarVector{
-    fn new(begin: Vector3, r: Vector3, theta: f32, phi: f32) -> PoolarVector {
-        PoolarVector {
-            begin,
-            r,
-            theta,
-            phi,
-        }
-    }
+pub trait CubeTrait{}
+pub struct Cube;
+impl CubeTrait for Cube{}
 
-    fn to_xyz(&self) -> Vector3 {
-        let x = self.r.x*self.theta.sin()*self.phi.cos()+self.begin.x;
-        let y = self.r.y*self.theta.sin()*self.phi.sin()+self.begin.y;
-        let z = self.r.z*self.theta.cos()+self.begin.z;
-        Vector3::new(x, y, z)
-    }
-
-    fn to_normal_xyz(&self) -> Vector3 {
-        let r_norm = self.r.magnitude();
-        let nx = (self.r.x/r_norm)*self.theta.sin()*self.phi.cos();
-        let ny = (self.r.y/r_norm)*self.theta.sin()*self.phi.sin();
-        let nz = (self.r.z/r_norm)*self.theta.cos();
-        Vector3::new(nx, ny, nz)
-    }
-}
-
-pub trait Object {
-    fn new() -> Self;
-
-    fn rescale_x(&mut self, scale: f32);
-    
-    fn rescale_y(&mut self, scale: f32);
-    
-    fn rescale_z(&mut self, scale: f32);
-
-    fn recolor(&mut self, color: Vector4);
-
-    fn generate_nodes(&mut self);
-    
-    fn translocate(&mut self, diff: Vector3);
-    
-    fn rotate_x(&mut self, theta_x: f32, center_y: f32, center_z: f32);
-    
-    fn rotate_y(&mut self, theta_y: f32, center_x: f32, center_z: f32);
-    
-    fn rotate_z(&mut self, theta_z: f32, center_x: f32, center_y: f32);    
-    
-    fn encode(self) -> Vec<f32>;
-    // and so on
-}
-
-pub struct Sphere {
+pub struct Object<T>{
+    phantom: PhantomData<T>,
     pub center: Vector3,
     pub scale: Vector3,
     pub color: Vector4,
     pub nodes: Vec<Node>,
 }
 
-impl Object for Sphere {
-    fn new() -> Sphere {
-        Sphere {
+impl<T> Object<T>{
+    pub fn new() -> Self {
+        Self {
+            phantom: PhantomData, 
             center: Vector3::new(0.0, 0.0, 0.0),
             scale: Vector3::new(0.0, 0.0, 0.0),
             color: Vector4::new(0.0, 0.0, 0.0, 1.0),
@@ -146,23 +101,60 @@ impl Object for Sphere {
         }
     }
 
-    fn rescale_x(&mut self, scale: f32) {
+    pub fn rescale_x(&mut self, scale: f32) {
         self.scale.x = scale;
     }
 
-    fn rescale_y(&mut self, scale: f32) {
+    pub fn rescale_y(&mut self, scale: f32) {
         self.scale.y = scale;
     }
 
-    fn rescale_z(&mut self, scale: f32) {
+    pub fn rescale_z(&mut self, scale: f32) {
         self.scale.z = scale;
     }
 
-    fn recolor(&mut self, color: Vector4) {
+    pub fn recolor(&mut self, color: Vector4) {
         self.color = color;
     }
 
-    fn generate_nodes(&mut self){
+    pub fn translocate(&mut self, diff: Vector3) {
+        for node in &mut self.nodes {
+            node.translocate(diff);
+        }
+    }
+
+    pub fn rotate_x(&mut self, theta_x: f32, center_y: f32, center_z: f32) {
+        for node in &mut self.nodes {
+            node.rotate_x(theta_x, center_y, center_z);
+        }
+    }
+
+    pub fn rotate_y(&mut self, theta_y: f32, center_x: f32, center_z: f32) {
+        for node in &mut self.nodes {
+            node.rotate_y(theta_y, center_x, center_z);
+        }
+    }
+
+    pub fn rotate_z(&mut self, theta_z: f32, center_x: f32, center_y: f32) {
+        for node in &mut self.nodes {
+            node.rotate_z(theta_z, center_x, center_y);
+        }
+    }
+
+    pub fn encode(self) -> Vec<f32> {
+        let mut ret = vec![];
+        for node in self.nodes {
+            for val in node.encode() {
+                ret.push(val);
+            }
+        }
+        ret
+    }
+}   //Object
+
+
+impl<T: SphereTrait> Object<T>{
+    pub fn generate_sphere_nodes(&mut self){
         let texture = Vector2::new(0.0, 0.0);
         for slice in 0..32 {
             for stack in 0..32 {
@@ -203,39 +195,45 @@ impl Object for Sphere {
             }
         }
     }
+}
 
-    fn translocate(&mut self, diff: Vector3) {
-        for node in &mut self.nodes {
-            node.translocate(diff);
-        }
-    }
-
-    fn rotate_x(&mut self, theta_x: f32, center_y: f32, center_z: f32) {
-        for node in &mut self.nodes {
-            node.rotate_x(theta_x, center_y, center_z);
-        }
-    }
-
-    fn rotate_y(&mut self, theta_y: f32, center_x: f32, center_z: f32) {
-        for node in &mut self.nodes {
-            node.rotate_y(theta_y, center_x, center_z);
-        }
-    }
-
-    fn rotate_z(&mut self, theta_z: f32, center_x: f32, center_y: f32) {
-        for node in &mut self.nodes {
-            node.rotate_z(theta_z, center_x, center_y);
-        }
-    }
-
-    fn encode(self) -> Vec<f32> {
-        let mut ret = vec![];
-        for node in self.nodes {
-            for val in node.encode() {
-                ret.push(val);
-            }
-        }
-        ret
+impl<T: CubeTrait> Object<T>{
+    pub fn generate_cube_nodes(&mut self){
+        let texture = Vector2::new(0.0, 0.0);
+        
     }
 }
 
+
+struct PoolarVector {
+    begin: Vector3,
+    r: Vector3,
+    theta: f32,
+    phi: f32,
+}
+
+impl  PoolarVector{
+    fn new(begin: Vector3, r: Vector3, theta: f32, phi: f32) -> PoolarVector {
+        PoolarVector {
+            begin,
+            r,
+            theta,
+            phi,
+        }
+    }
+
+    fn to_xyz(&self) -> Vector3 {
+        let x = self.r.x*self.theta.sin()*self.phi.cos()+self.begin.x;
+        let y = self.r.y*self.theta.sin()*self.phi.sin()+self.begin.y;
+        let z = self.r.z*self.theta.cos()+self.begin.z;
+        Vector3::new(x, y, z)
+    }
+
+    fn to_normal_xyz(&self) -> Vector3 {
+        let r_norm = self.r.magnitude();
+        let nx = (self.r.x/r_norm)*self.theta.sin()*self.phi.cos();
+        let ny = (self.r.y/r_norm)*self.theta.sin()*self.phi.sin();
+        let nz = (self.r.z/r_norm)*self.theta.cos();
+        Vector3::new(nx, ny, nz)
+    }
+}
