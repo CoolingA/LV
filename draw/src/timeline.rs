@@ -1,12 +1,63 @@
-use objects;
+use image_manager;
+use image_manager::ImageManager;
 
-type Vector3 = cgmath::Vector3<f32>;
-type Vector4 = cgmath::Vector4<f32>;
+type Vector2f = cgmath::Vector2<f32>;
+type Vector3f = cgmath::Vector3<f32>;
+type Vector4f = cgmath::Vector4<f32>;
+type Vector2i = cgmath::Vector2<i32>;
 
-pub enum ObjectKind {
-    Sphere,
-    Cube,
-    Tetrahedron,
+pub struct RootTimeline {
+    pub tl_2d: Timeline2D,
+    pub tl_3d: Timeline3D,
+}
+
+pub struct Timeline2D {
+    width: i32,
+    height: i32,
+    background: ImageManager,
+    layers: Vec<Layer2D>,
+}
+
+pub struct Timeline3D {
+    layers: Vec<Layer3D>,
+}
+
+pub struct Layer2D {
+    objects: Vec<Object2D>,
+}
+
+pub struct Layer3D {
+    objects: Vec<Object3D>,
+}
+
+pub struct Object2D {
+    kind: Object2DKind,
+    frame: Vector2i,
+    position_start: Vector2f,
+    position_end: Vector2f,
+    rotation_start: Vector2f,
+    rotation_end: Vector2f,
+    scale_start: Vector2f,
+    scale_end: Vector2f,
+    center_start: Vector2f,
+    center_end: Vector2f,
+    color: Vector4f,
+}
+pub struct Object3D {
+    kind: Object3DKind,
+    frame: Vector2i,
+    position_start: Vector3f,
+    position_end: Vector3f,
+    rotation_start: Vector3f,
+    rotation_end: Vector3f,
+    scale_start: Vector3f,
+    scale_end: Vector3f,
+    center_start: Vector3f,
+    center_end: Vector3f,
+    color: Vector4f,
+}
+
+pub enum Object2DKind {
     Circle,
     Square,
     Triangle,
@@ -14,112 +65,10 @@ pub enum ObjectKind {
     Str,
 }
 
-pub struct Object {
-    kind: ObjectKind,
-    start: i32,
-    end: i32,
-    x_start: f32,
-    x_end: f32,
-    y_start: f32,
-    y_end: f32,
-    z_start: f32,
-    z_end: f32,
-    rx_start: f32,
-    rx_end: f32,
-    ry_start: f32,
-    ry_end: f32,
-    rz_start: f32,
-    rz_end: f32,
-    sx_start: f32,
-    sx_end: f32,
-    sy_start: f32,
-    sy_end: f32,
-    sz_start: f32,
-    sz_end: f32,
-    cx_start: f32,
-    cx_end: f32,
-    cy_start: f32,
-    cy_end: f32,
-    cz_start: f32,
-    cz_end: f32,
-    red: f32,
-    green: f32,
-    blue: f32,
-    alpha: f32,
-}
-
-// objects must be ordered by time!
-pub struct Layer {
-    objects: Vec<Object>,
-}
-
-pub struct TimeLine {
-    layers: Vec<Layer>,
-}
-
-impl Object {
-    pub fn gen(self, frame_num: i32) -> impl objects::Object {
-        let move_ratio = (frame_num - self.start) as f32 / (self.end - self.start) as f32;
-        let x = (self.x_end - self.x_start) * move_ratio;
-        let y = (self.y_end - self.y_start) * move_ratio;
-        let z = (self.z_end - self.z_start) * move_ratio;
-        let rx = (self.rx_end - self.rx_start) * move_ratio;
-        let ry = (self.ry_end - self.ry_start) * move_ratio;
-        let rz = (self.rz_end - self.rz_start) * move_ratio;
-        let sx = (self.sx_end - self.sx_start) * move_ratio;
-        let sy = (self.sy_end - self.sy_start) * move_ratio;
-        let sz = (self.sz_end - self.sz_start) * move_ratio;
-        let cx = (self.cx_end - self.cx_start) * move_ratio;
-        let cy = (self.cy_end - self.cy_start) * move_ratio;
-        let cz = (self.cz_end - self.cz_start) * move_ratio;
-        match self.kind {
-            Sphere => {
-                let sphere = objects::Sphere::new();
-                sphere.rescale_x(sx);
-                sphere.rescale_x(sy);
-                sphere.rescale_x(sz);
-                sphere.recolor(Vector4::new(self.red, self.green, self.blue, self.alpha));
-                sphere.generate_nodes();
-                sphere.translocate(Vector3::new(x, y, z));
-                sphere.rotate_x(rx, cy, cz);
-                sphere.rotate_y(ry, cx, cz);
-                sphere.rotate_z(rz, cx, cy);
-                sphere
-            },
-        }
-    }
-}
-
-impl Layer {
-    pub fn gen(self, frame_num: i32) -> Option(impl objects::Object) {
-        let existance = self.is_exist(frame_num);
-        if existance.0 {
-            return Some(self.objects[existance.1].gen(frame_num));
-        }
-        None
-    }
-
-    fn is_exist(self, frame_num: i32) -> (bool, i32) {
-        let mut object_index: i32 = 0;
-        for object in self.objects {
-            if object.end > frame_num {
-                break;
-            }
-            object_index += 1;
-        }
-        (self.objects[object_index] < frame_num, object_index)
-    }
-}
-
-impl TimeLine {
-    pub fn gen(self, frame_num: i32) -> Vec<impl objects::Object> {
-        let mut objects = vec![];
-        for layer in self.layers {
-            let may_object = layer.gen(frame_num);
-            if let Some(object) = may_object {
-                objects.push(object.gen(frame_num));
-            }
-        }
-        objects
-    }
+pub enum Object3DKind {
+    Sphere,
+    Cube,
+    Tetrahedron,
+    Image,
+    Str,
 }
