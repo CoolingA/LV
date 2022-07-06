@@ -3,7 +3,7 @@ mod objects;
 
 use cg_system::CGExecutor;
 use std::f32::consts::PI;
-use objects::{Object, Sphere, Cube};
+use objects::{Object, Sphere, Cube, Tetrahedron, Cylinder, Circle, Triangle, Square};
 
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
@@ -14,21 +14,55 @@ type Matrix4 = cgmath::Matrix4<f32>;
 fn main() {
     let window_width: u32 = 1920;
     let window_height: u32 = 1080;
-
     let mut vertex_array = vec![];
-    for sphere_index in 0..7 {
-        let sphere_center = Vector3::new(0.0, sphere_index as f32 * 3.0 - 9.0, 0.0);
-        let sphere_radius = 1.0;
-        let color = Vector4::new(sphere_index as f32 / 5.0, 0.0, 0.5, 1.0);
-        let mut sphere = Object::<Sphere>::new();
-        sphere.rescale_x(sphere_radius*2.0);
-        sphere.rescale_y(sphere_radius*1.0);
-        sphere.rescale_z(sphere_radius*1.0);
-        sphere.recolor(color);
-        sphere.generate_sphere_nodes();
-        sphere.translocate(sphere_center);
-        sphere.rotate_z(PI/3.0*sphere_index as f32, sphere_center.x, sphere_center.y);
-        vertex_array.push(sphere.encode());
+
+    let object_center = Vector3::new(0.0, 0.0, 0.0);
+    let color = Vector4::new(0.0, 0.0, 0.0, 1.0);
+    let mut test_object = Object::<Cylinder>::new();
+    test_object.rescale_x(0.05);
+    test_object.rescale_y(0.05);
+    test_object.rescale_z(50.0);
+    test_object.recolor(color);
+    test_object.generate_cylinder_nodes();
+    test_object.translocate(object_center);
+    vertex_array.push(test_object.encode());
+
+    let mut test_object = Object::<Cylinder>::new();
+    test_object.rescale_x(0.05);
+    test_object.rescale_y(0.05);
+    test_object.rescale_z(50.0);
+    test_object.recolor(color);
+    test_object.generate_cylinder_nodes();
+    test_object.translocate(object_center);
+    test_object.rotate_x(PI/2.0 as f32, object_center.y, object_center.z);
+    vertex_array.push(test_object.encode());
+
+    let mut test_object = Object::<Cylinder>::new();
+    test_object.rescale_x(0.05);
+    test_object.rescale_y(0.05);
+    test_object.rescale_z(50.0);
+    test_object.recolor(color);
+    test_object.generate_cylinder_nodes();
+    test_object.translocate(object_center);
+    test_object.rotate_y(PI/2.0 as f32, object_center.x, object_center.z);
+    vertex_array.push(test_object.encode());
+
+
+    for object_index in 0..7 {
+        let object_center = Vector3::new(object_index as f32 * 4.0 - 12.0, object_index as f32 * 4.0 - 16.0, object_index as f32 * 4.0 - 12.0);
+        let object_radius = 1.0;
+        let color = Vector4::new(object_index as f32 / 5.0, 0.0, 0.5, 1.0);
+        let mut test_object = Object::<Tetrahedron>::new();
+        test_object.rescale_x(object_radius*2.0);
+        test_object.rescale_y(object_radius*2.0);
+        test_object.rescale_z(object_radius*2.0);
+        test_object.recolor(color);
+        test_object.generate_tetrahedron_nodes();
+        test_object.translocate(object_center);
+        test_object.rotate_x(PI/2.0*(object_index) as f32, object_center.y, object_center.z);
+        test_object.rotate_y(PI/3.0*(object_index) as f32, object_center.x, object_center.z);
+        test_object.rotate_z(PI/4.0*(object_index) as f32, object_center.x, object_center.y);
+        vertex_array.push(test_object.encode());
     }
     let camera_x = 20.0 as f32;
     let camera_y = -20.0 as f32;
