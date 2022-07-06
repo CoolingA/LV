@@ -82,6 +82,26 @@ pub trait CubeTrait{}
 pub struct Cube;
 impl CubeTrait for Cube{}
 
+pub trait TetrahedronTrait{}
+pub struct Tetrahedron;
+impl TetrahedronTrait for Tetrahedron{}
+
+pub trait CylinderTrait{}
+pub struct Cylinder;
+impl CylinderTrait for Cylinder{}
+
+pub trait CircleTrait{}
+pub struct Circle;
+impl CircleTrait for Circle{}
+
+pub trait SquareTrait{}
+pub struct Square;
+impl SquareTrait for Square{}
+
+pub trait TriangleTrait{}
+pub struct Triangle;
+impl TriangleTrait for Triangle{}
+
 pub struct Object<T>{
     phantom: PhantomData<T>,
     pub center: Vector3,
@@ -153,11 +173,12 @@ impl<T> Object<T>{
 }   //Object
 
 
-impl<T: SphereTrait> Object<T>{
-    pub fn generate_sphere_nodes(&mut self){
+impl<T: SphereTrait> Object<T> {
+    pub fn generate_sphere_nodes(&mut self) {
         let texture = Vector2::new(0.0, 0.0);
         for slice in 0..32 {
             for stack in 0..32 {
+                // 1
                 let theta = ((slice) as f32 / 32.0) * std::f32::consts::PI*2.0;
                 let phi = ((stack) as f32 / 32.0) * std::f32::consts::PI*2.0;
                 let poolar_vector = PoolarVector::new(self.center, self.scale , theta, phi);
@@ -195,14 +216,220 @@ impl<T: SphereTrait> Object<T>{
             }
         }
     }
-}
+}   //Sphere
 
-impl<T: CubeTrait> Object<T>{
-    pub fn generate_cube_nodes(&mut self){
+impl<T: CubeTrait> Object<T> {
+    pub fn generate_cube_nodes(&mut self) {
         let texture = Vector2::new(0.0, 0.0);
+
+        self.scale *= 2.0;
+        let offset = Vector3::new(-0.5, -0.5, -0.5);
+
+        let normal_vecs:Vec<[f32;3]> 
+        = vec![
+            [-1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0], 
+            [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+        ];
+
+        for normal_vec in normal_vecs{
+            for i in 0..3{
+                let mut cube_vertex: [f32;3] = [0.0, 0.0, 0.0];
+                if normal_vec[i] == -1.0{
+                    //1
+                    cube_vertex[i] = 0.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //2
+                    cube_vertex[(i+2)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //3
+                    cube_vertex[(i+1)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //4
+                    for t in 0..3{ cube_vertex[t] = 0.0; }
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //5
+                    cube_vertex[(i+2)%3] = 1.0;
+                    cube_vertex[(i+1)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //6
+                    cube_vertex[(i+2)%3] = 0.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    break;
+                }
+                if normal_vec[i] == 1.0{
+                    //1
+                    cube_vertex[i] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //2
+                    cube_vertex[(i+1)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //3
+                    cube_vertex[(i+2)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //4
+                    for t in 0..3{ cube_vertex[t] = 0.0; }
+                    cube_vertex[i] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //5
+                    cube_vertex[(i+2)%3] = 1.0;
+                    cube_vertex[(i+1)%3] = 1.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    //6
+                    cube_vertex[(i+1)%3] = 0.0;
+                    self.nodes.push(Node::new(array_to_coordinate(self.center, cube_vertex, offset, self.scale),
+                        array_to_Vector3(normal_vec), self.color, texture));
+                    break;
+                }
+            };
+
+        }
         
     }
+
+}   //Cube
+
+impl <T: TetrahedronTrait> Object<T> {
+    pub fn generate_tetrahedron_nodes(&mut self) {
+        let texture = Vector2::new(0.0, 0.0);
+        
+        let theta = ((-1.0 / 3.0) as f32).acos();
+        let mountain_top = Vector3::new(0.0, 0.0, self.scale.z);
+        for i in 0..3{
+            let phi = i as f32 * 2.0 * -std::f32::consts::FRAC_PI_3;
+            let bottom_triangle_vertex1 = PoolarVector::new(self.center, self.scale, theta, phi).to_xyz();
+            let phi = (i + 1) as f32 * 2.0 * -std::f32::consts::FRAC_PI_3;
+            let bottom_triangle_vertex2 = PoolarVector::new(self.center, self.scale, theta, phi).to_xyz();
+            let normal_vec = (mountain_top - bottom_triangle_vertex1).cross(bottom_triangle_vertex2 - mountain_top).normalize();
+            self.nodes.push(Node::new(bottom_triangle_vertex1, normal_vec, self.color, texture));
+            self.nodes.push(Node::new(mountain_top, normal_vec, self.color, texture));
+            self.nodes.push(Node::new(bottom_triangle_vertex2, normal_vec, self.color, texture));
+        }
+        for i in 0..3{
+            let phi = i as f32 * 2.0 * -std::f32::consts::FRAC_PI_3;
+            let bottom_triangle_vertex = PoolarVector::new(self.center, self.scale, theta, phi).to_xyz();
+            self.nodes.push(Node::new(bottom_triangle_vertex, Vector3::new(0.0, 0.0, -1.0), self.color, texture))
+        }
+    }
+}   //tetrahedron
+
+impl <T: CylinderTrait> Object<T> {
+    pub fn generate_cylinder_nodes(&mut self) {
+        let texture = Vector2::new(0.0, 0.0);
+
+        for stack in 0..32{
+            let bottom_normal_vec = Vector3::new(0.0, 0.0, 1.0);
+            let phi = ((stack) as f32 / 32.0) * std::f32::consts::PI*2.0;
+            let mut sector_vertex1 = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi).to_xyz();
+            let phi = ((stack + 1) as f32 / 32.0) * std::f32::consts::PI*2.0;
+            let mut sector_vertex2 = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi).to_xyz();
+            let lateral_normal_vec = ((sector_vertex1 + sector_vertex2) / 2.0).normalize();
+
+            sector_vertex1.z += self.scale.z / 2.0;
+            sector_vertex2.z += self.scale.z / 2.0;
+            self.nodes.push(Node::new(sector_vertex1, bottom_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex2, bottom_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(Vector3::new(self.center.x, self.center.y, self.center.z + self.scale.z / 2.0), bottom_normal_vec, self.color, texture));
+
+            self.nodes.push(Node::new(sector_vertex1, lateral_normal_vec, self.color, texture));
+            sector_vertex1.z -= self.scale.z;
+            self.nodes.push(Node::new(sector_vertex1, lateral_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex2, lateral_normal_vec, self.color, texture));
+
+            self.nodes.push(Node::new(sector_vertex2, lateral_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex1, lateral_normal_vec, self.color, texture));
+            sector_vertex2.z -= self.scale.z;
+            self.nodes.push(Node::new(sector_vertex2, lateral_normal_vec, self.color, texture));
+            
+            let bottom_normal_vec = Vector3::new(0.0, 0.0, -1.0);
+            self.nodes.push(Node::new(sector_vertex2, bottom_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex1, bottom_normal_vec, self.color, texture));
+            self.nodes.push(Node::new(Vector3::new(self.center.x, self.center.y, self.center.z - self.scale.z / 2.0), bottom_normal_vec, self.color, texture));
+        }
+    }
 }
+
+impl <T: CircleTrait> Object<T> {
+    pub fn generate_circle_nodes(&mut self) {
+        let texture = Vector2::new(0.0, 0.0);
+
+        for stack in 0..32{
+            let normal_vec = Vector3::new(0.0, 0.0, -1.0);
+            let phi = ((stack) as f32 / 32.0) * std::f32::consts::PI*2.0;
+            let sector_vertex1 = PoolarVector::new(self.center, self.scale , std::f32::consts::FRAC_PI_2, phi);
+            let phi = ((stack + 1) as f32 / 32.0) * std::f32::consts::PI*2.0;
+            let sector_vertex2 = PoolarVector::new(self.center, self.scale , std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(sector_vertex1.to_xyz(), normal_vec, self.color, texture));
+            self.nodes.push(Node::new(self.center, normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex2.to_xyz(), normal_vec, self.color, texture));
+            let normal_vec = Vector3::new(0.0, 0.0, 1.0);
+            self.nodes.push(Node::new(sector_vertex2.to_xyz(), normal_vec, self.color, texture));
+            self.nodes.push(Node::new(self.center, normal_vec, self.color, texture));
+            self.nodes.push(Node::new(sector_vertex1.to_xyz(), normal_vec, self.color, texture));
+        }
+    }
+}   //Circle
+
+impl <T: TriangleTrait> Object<T> {
+    pub fn generate_triangle_nodes(&mut self) {
+        let texture = Vector2::new(0.0, 0.0);
+
+        let normal_vec = Vector3::new(0.0, 0.0, 1.0);
+        for i in 0..3{
+            let phi = i as f32 * std::f32::consts::FRAC_PI_3 * 2.0;
+            let vertex = PoolarVector::new(self.center, self.scale , std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+
+        let normal_vec = Vector3::new(0.0, 0.0, -1.0);
+        for i in 0..3{
+            let phi = i as f32 * -std::f32::consts::FRAC_PI_3 * 2.0;
+            let vertex = PoolarVector::new(self.center, self.scale , std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+    }
+}   //Triangle
+
+impl <T: SquareTrait> Object<T> {
+    pub fn generate_square_nodes(&mut self) {
+        let texture = Vector2::new(0.0, 0.0);
+
+        let normal_vec = Vector3::new(0.0, 0.0, 1.0);
+        for i in 0..3{
+            let phi = i as f32 * std::f32::consts::FRAC_PI_2;
+            let vertex = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+        for i in 0..3{
+            let phi = (i + 2) as f32 * std::f32::consts::FRAC_PI_2;
+            let vertex = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+
+        let normal_vec = Vector3::new(0.0, 0.0, -1.0);
+        for i in 0..3{
+            let phi = i as f32 * -std::f32::consts::FRAC_PI_2;
+            let vertex = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+        for i in 0..3{
+            let phi = (i + 2) as f32 * -std::f32::consts::FRAC_PI_2;
+            let vertex = PoolarVector::new(self.center, self.scale, std::f32::consts::FRAC_PI_2, phi);
+            self.nodes.push(Node::new(vertex.to_xyz(), normal_vec, self.color, texture));
+        }
+    }
+}   //Square
+
 
 
 struct PoolarVector {
@@ -221,14 +448,14 @@ impl  PoolarVector{
             phi,
         }
     }
-
+    
     fn to_xyz(&self) -> Vector3 {
         let x = self.r.x*self.theta.sin()*self.phi.cos()+self.begin.x;
         let y = self.r.y*self.theta.sin()*self.phi.sin()+self.begin.y;
         let z = self.r.z*self.theta.cos()+self.begin.z;
         Vector3::new(x, y, z)
     }
-
+    
     fn to_normal_xyz(&self) -> Vector3 {
         let r_norm = self.r.magnitude();
         let nx = (self.r.x/r_norm)*self.theta.sin()*self.phi.cos();
@@ -236,4 +463,16 @@ impl  PoolarVector{
         let nz = (self.r.z/r_norm)*self.theta.cos();
         Vector3::new(nx, ny, nz)
     }
+}
+
+
+fn array_to_Vector3(arr: [f32;3]) -> Vector3{
+    Vector3::new(arr[0], arr[1], arr[2])
+}
+
+fn array_to_coordinate(begin: Vector3, p: [f32;3], offset: Vector3, scale: Vector3) -> Vector3 {
+    let x = (p[0] + offset.x) * scale.x;
+    let y = (p[1] + offset.y) * scale.y;
+    let z = (p[2] + offset.z) * scale.z;
+    begin + Vector3::new(x, y, z)
 }
